@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestão de Cancelamento de Contratos — Ares Fit</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --panel-2:#0b1528;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --blue:#3b82f6;
+      --blue-700:#2563eb;
+      --green:#22c55e;
+      --yellow:#f59e0b;
+      --red:#ef4444;
+      --border:#1f2a44;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", "Noto Sans", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.12), transparent 60%),
+                  radial-gradient(1200px 600px at 100% 0%, rgba(16,185,129,.08), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    .wrapper{max-width:1100px; margin:40px auto; padding:0 20px}
+    h1{font-size: clamp(1.4rem, 1rem + 2vw, 2.2rem); margin:0 0 16px; letter-spacing:.3px}
+    .sub{color:var(--muted); margin-bottom:24px}
+
+    .card{background:linear-gradient(180deg, var(--panel), var(--panel-2)); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)}
+
+    form#calcForm{padding:18px}
+    .grid{
+      display:grid; gap:14px;
+      grid-template-columns: repeat(5, minmax(160px, 1fr));
+    }
+    @media (max-width: 1000px){ .grid{grid-template-columns: repeat(3, minmax(160px, 1fr));}}
+    @media (max-width: 720px){ .grid{grid-template-columns: 1fr 1fr;}}
+    @media (max-width: 480px){ .grid{grid-template-columns: 1fr;}}
+
+    label{display:block; font-size:.9rem; color:var(--muted); margin:2px 0 6px}
+    input[type="text"], input[type="date"]{
+      width:100%; padding:8px 8px; border-radius:12px; outline:none;
+      border:1px solid var(--border); background:#0a1222; color:var(--text);
+    }
+    input::placeholder{color:#5b6b90}
+
+    .actions{display:flex; gap:12px; align-items:stretch}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:0 22px; min-width:140px; border-radius:12px; border:1px solid #1a3a8a;
+      background: linear-gradient(180deg, var(--blue), var(--blue-700));
+      color:white; font-weight:700; letter-spacing:.3px; cursor:pointer; user-select:none;
+      transition: transform .04s ease, filter .2s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 24px rgba(37,99,235,.35);
+    }
+    .btn:hover{filter:brightness(1.05)}
+    .btn:active{transform: translateY(1px)}
+
+    .total-box{
+      display:flex; flex-direction:column; justify-content:center; padding:10px 14px; min-width:220px;
+      border-radius:12px; border:1px solid var(--border); background:#0b1528; color:var(--text);
+    }
+    .total-box .label{font-size:.8rem; color:var(--muted)}
+    .total-box .value{font-size:1.2rem; font-weight:800; margin-top:4px}
+
+    .table-wrap{margin-top:20px}
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:var(--radius);}
+    thead th{ text-align:left; font-size:.9rem; color:var(--muted); font-weight:600; background: #0b1528; border-bottom:1px solid var(--border); padding:10px}
+    tbody td{ padding:6px; border-bottom:1px solid var(--border)}
+    tbody tr:nth-child(odd) td{ background: #0c152a}
+    tbody tr:nth-child(even) td{ background: #0d172f}
+
+    .mono{font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1}
+
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-weight:700; font-size:.75rem; letter-spacing:.2px; border:1px solid transparent }
+    .badge .dot{ width:6px; height:6px; border-radius:50% }
+    .cobrado{ color: var(--green); background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.25) }
+    .cobrado .dot{ background: var(--green)}
+    .avisoprevio{ color: var(--yellow); background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.25)}
+    .avisoprevio .dot{ background: var(--yellow)}
+    .estornado{ color: var(--red); background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.25)}
+    .estornado .dot{ background: var(--red)}
+
+    .footer-note{ color:var(--muted); font-size:.85rem; margin-top:10px}
+    .err{ color:#fca5a5; font-size:.9rem; margin-top:8px }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>Gestão de Cancelamento de Contratos — Ares Fit</h1>
+
+    <form id="calcForm" class="card" autocomplete="off">
+      <div class="grid">
+        <div>
+          <label for="valorTotal">Valor total (R$)</label>
+          <input id="valorTotal" type="text" inputmode="decimal" placeholder="3.000,00" />
+        </div>
+        <div>
+          <label for="dataVenda">Data de Venda</label>
+          <input id="dataVenda" type="date" />
+        </div>
+        <div>
+          <label for="dataCancel">Data de Cancelamento</label>
+          <input id="dataCancel" type="date" />
+        </div>
+        <div class="actions">
+          <button type="button" class="btn" onclick="calcular()">CALCULAR</button>
+          <div class="total-box">
+            <span class="label">Total Estornado</span>
+            <span id="totalEstornado" class="value mono">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+      <div id="msg" class="err" style="display:none"></div>
+    </form>
+
+    <div class="table-wrap">
+      <table class="card">
+        <thead>
+          <tr>
+            <th>Parcela</th>
+            <th>Data de cobrança</th>
+            <th>Valor</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyParcelas"></tbody>
+      </table>
+    </div>
+
+    <p class="footer-note">Permanência mínima: 5 meses. Aviso prévio: 30 dias (próxima parcela cobrada, futuras estornadas).</p>
+  </div>
+
+  <script>
+    // ── Permanência mínima (em parcelas) ──────────────────────────────────────
+    const PERMANENCIA_MINIMA = 5; // altere aqui para ajustar futuramente
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const fmtBRL  = cents => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL'}).format((cents||0)/100);
+    const pad2    = n => String(n).padStart(2,'0');
+    const fmtDate = d => `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+
+    function parseBRLToCents(str){
+      if(!str) return NaN;
+      str = String(str).trim().replace(/[^0-9,.-]/g, '');
+      if(str.includes(',')) str = str.replace(/\./g,'').replace(',', '.');
+      else                  str = str.replace(/\./g,'');
+      const num = Number(str);
+      return Number.isNaN(num) ? NaN : Math.round(num * 100);
+    }
+
+    function addMonthsPreserveDay(date, months){
+      const m = date.getMonth() + months;
+      const lastDay = new Date(date.getFullYear(), m + 1, 0, 12).getDate();
+      return new Date(date.getFullYear(), m, Math.min(date.getDate(), lastDay), 12);
+    }
+
+    // ── Lógica principal ──────────────────────────────────────────────────────
+    function buildSchedule(totalCents, vendaDate, cancelDate){
+      const items   = [];
+      const base      = Math.floor(totalCents / 12);
+      const remainder = totalCents - base * 12;
+
+      // Gera as 12 parcelas
+      for(let i = 0; i < 12; i++){
+        items.push({
+          idx:    i + 1,
+          due:    addMonthsPreserveDay(vendaDate, i),
+          valor:  base + (i === 11 ? remainder : 0),
+          status: 'cobrado'
+        });
+      }
+
+      // Encontra o candidato natural ao aviso prévio:
+      // primeira parcela com vencimento >= data de cancelamento
+      let avisoIndex = -1;
+      for(let i = 0; i < items.length; i++){
+        if(items[i].due >= cancelDate){ avisoIndex = i; break; }
+      }
+
+      if(avisoIndex >= 0){
+        // Garante permanência mínima de PERMANENCIA_MINIMA meses:
+        // o aviso prévio não pode ocorrer antes da parcela de índice (PERMANENCIA_MINIMA - 1)
+        if(avisoIndex < PERMANENCIA_MINIMA - 1){
+          avisoIndex = PERMANENCIA_MINIMA - 1;
+        }
+
+        items[avisoIndex].status = 'avisoprevio';
+        for(let j = avisoIndex + 1; j < items.length; j++){
+          items[j].status = 'estornado';
+        }
+      }
+
+      // Soma apenas parcelas estornadas (aviso prévio é cobrado)
+      let totalEstornado = 0;
+      for(const it of items){
+        if(it.status === 'estornado') totalEstornado += it.valor;
+      }
+
+      return { items, totalEstornado };
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderBadge(status){
+      if(status === 'avisoprevio') return `<span class="badge avisoprevio"><span class="dot"></span>Aviso Prévio</span>`;
+      if(status === 'estornado')   return `<span class="badge estornado"><span class="dot"></span>Cobrado/Estornado</span>`;
+      return `<span class="badge cobrado"><span class="dot"></span>Cobrado</span>`;
+    }
+
+    function renderTable(items){
+      const tbody = document.getElementById('tbodyParcelas');
+      tbody.innerHTML = '';
+      const frag = document.createDocumentFragment();
+      items.forEach(it => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mono">${it.idx}</td>
+          <td class="mono">${fmtDate(it.due)}</td>
+          <td class="mono">${fmtBRL(it.valor)}</td>
+          <td>${renderBadge(it.status)}</td>
+        `;
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+    }
+
+    function showError(msg){
+      const el = document.getElementById('msg');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    // ── Eventos ───────────────────────────────────────────────────────────────
+    const valorInput = document.getElementById('valorTotal');
+    valorInput.addEventListener('blur', () => {
+      const cents = parseBRLToCents(valorInput.value);
+      if(!Number.isNaN(cents) && cents >= 0) valorInput.value = fmtBRL(cents);
+    });
+
+    function calcular(){
+      showError('');
+
+      const rawValor = document.getElementById('valorTotal').value;
+      const dVenda   = document.getElementById('dataVenda').value;
+      const dCancel  = document.getElementById('dataCancel').value;
+
+      const cents = parseBRLToCents(rawValor);
+      if(Number.isNaN(cents) || cents <= 0) return showError('Informe um valor total válido (ex.: 3.000,00).');
+      if(!dVenda)  return showError('Informe a Data de Venda.');
+      if(!dCancel) return showError('Informe a Data de Cancelamento.');
+
+      const vendaDate  = new Date(dVenda  + 'T12:00:00');
+      const cancelDate = new Date(dCancel + 'T12:00:00');
+
+      const { items, totalEstornado } = buildSchedule(cents, vendaDate, cancelDate);
+      renderTable(items);
+      document.getElementById('totalEstornado').textContent = fmtBRL(totalEstornado);
+    }
+  </script>
+</body>
+</html>
